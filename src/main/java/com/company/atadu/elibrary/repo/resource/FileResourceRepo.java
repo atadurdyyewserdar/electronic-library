@@ -1,2 +1,4 @@
-package com.company.atadu.elibrary.repo.resource;public class FileResourceRepo {
+package com.company.atadu.elibrary.repo.resource;
+
+public class FileResourceRepo {
 }
