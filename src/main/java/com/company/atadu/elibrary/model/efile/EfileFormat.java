@@ -10,7 +10,4 @@ public class EfileFormat {
     @Column(name = "id")
     private Long id;
     private String format_name;
-
-    @OneToOne(mappedBy = "file_format")
-    private Efile efile;
 }
