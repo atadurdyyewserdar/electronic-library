@@ -1,13 +1,17 @@
 # MySQL Configuration
 spring:
-    datasource:
-        url: jdbc:mysql://localhost:3306/elibrary
-        username: root
-        password: root123
-    jpa:
-        show-sql: true
-        hibernate:
-            ddl-auto: create-drop
-        properties:
-            hibernate:
-                dialect: org.hibernate.dialect.MySQL5Dialect
+  datasource:
+    url: jdbc:mysql://localhost:3306/elibrary
+    username: root
+    password: root123
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+#JWT configuration
+jwt:
+  secret: 'wHS;%@Liz+A/.4f]GsWM4?jMs;crRmK7iGif>}I!dbSfH3g<hJSFt)_tB:il.zd'
