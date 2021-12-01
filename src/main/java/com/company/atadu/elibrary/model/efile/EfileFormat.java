@@ -9,5 +9,5 @@ public class EfileFormat {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
     private Long id;
-    private String format_name;
+    private String formatName;
 }
