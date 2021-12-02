@@ -2,13 +2,16 @@ package com.company.atadu.elibrary.controller.user;
 
 import com.company.atadu.elibrary.constant.FileConstant;
 import com.company.atadu.elibrary.constant.SecurityConstant;
+import com.company.atadu.elibrary.dto.wishlist.WishlistDto;
 import com.company.atadu.elibrary.exception.EmailNotFoundException;
 import com.company.atadu.elibrary.exception.UserNotFoundException;
 import com.company.atadu.elibrary.exception.UsernameExistException;
 import com.company.atadu.elibrary.model.user.AppUser;
 import com.company.atadu.elibrary.model.user.HttpResponse;
 import com.company.atadu.elibrary.model.user.UserPrincipal;
+import com.company.atadu.elibrary.model.wishlist.Wishlist;
 import com.company.atadu.elibrary.service.user.AppUserService;
+import com.company.atadu.elibrary.service.wishlist.WishlistService;
 import com.company.atadu.elibrary.util.JWTTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -39,12 +42,51 @@ public class AppUserController {
     private final AppUserService userService;
     private AuthenticationManager authenticationManager;
     private JWTTokenProvider tokenProvider;
+    private WishlistService wishlistService;
 
     @Autowired
-    public AppUserController(AppUserService userService, AuthenticationManager authenticationManager, JWTTokenProvider tokenProvider) {
+    public AppUserController(AppUserService userService,
+                             AuthenticationManager authenticationManager,
+                             JWTTokenProvider tokenProvider,
+                             WishlistService wishlistService) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
+        this.wishlistService = wishlistService;
+    }
+
+    @PostMapping("/create-wishlist")
+    public ResponseEntity<String> createWishlist(@RequestBody WishlistDto wishlistDto) {
+        String result = wishlistService.createWishlist(wishlistDto);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @PostMapping("/add-efile-to-wishlist")
+    public ResponseEntity<HttpResponse> addToWishlist(@RequestParam("efileId") Long fileId,
+                                                      @RequestParam("wishlistId") Long wishlistId) {
+        wishlistService.addNewItemToWishlist(fileId, wishlistId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/remove-from-wishlist/{wishlistId}/{efileId}")
+    public ResponseEntity<HttpResponse> removeFromWishlist(@PathVariable Long wishlistId,
+                                                           @PathVariable Long efileId) {
+        wishlistService.removeFromWishlist(wishlistId, efileId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/remove-wishlist/{id}")
+    public ResponseEntity<HttpResponse> deleteWishlist(@PathVariable Long id) {
+        wishlistService.deleteWishlist(id);
+        return response(HttpStatus.OK, "Wishlist deleted successfully");
+    }
+
+    @PutMapping("/update-wishlist")
+    public ResponseEntity<Wishlist> updateWishlist(@RequestParam("wishlistId") Long wishlistId,
+                                                   @RequestParam("wishlistName") String name,
+                                                   @RequestParam("isPrivate") boolean isPrivate) {
+        Wishlist updatedWishlist = wishlistService.updateWishlist(wishlistId, name, isPrivate);
+        return new ResponseEntity<>(updatedWishlist, HttpStatus.OK);
     }
 
     @PostMapping("/register")
@@ -54,7 +96,7 @@ public class AppUserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AppUser> login(@RequestBody AppUser user) throws UserNotFoundException, EmailNotFoundException, UsernameExistException {
+    public ResponseEntity<AppUser> login(@RequestBody AppUser user) {
         authenticate(user.getUsername(), user.getPassword());
         AppUser loginUser = userService.findUserByUsername(user.getUsername());
         UserPrincipal userPrincipal = new UserPrincipal(loginUser);
