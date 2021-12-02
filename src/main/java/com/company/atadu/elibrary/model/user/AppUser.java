@@ -2,6 +2,7 @@ package com.company.atadu.elibrary.model.user;
 
 import com.company.atadu.elibrary.model.efile.Efile;
 import com.company.atadu.elibrary.model.rating.Rating;
+import com.company.atadu.elibrary.model.wishlist.Wishlist;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -35,6 +36,9 @@ public class AppUser implements Serializable {
 
     @OneToMany(mappedBy = "appUser")
     private Set<Rating> ratings;
+
+    @OneToMany(mappedBy = "appUser")
+    private Set<Wishlist> wishlists;
 
     public AppUser() {
     }
