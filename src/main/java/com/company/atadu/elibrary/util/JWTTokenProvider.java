@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Component
 public class JWTTokenProvider {
     @Value("${jwt.secret}")
     private String secret;
@@ -57,7 +59,7 @@ public class JWTTokenProvider {
         return expiration.before(new Date());
     }
 
-    private List<GrantedAuthority> getAuthorities(String token) {
+    public List<GrantedAuthority> getAuthorities(String token) {
         String[] claims = getClaimsFromToken(token);
         return Arrays.stream(claims).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
