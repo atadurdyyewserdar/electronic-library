@@ -48,6 +48,9 @@ public class Efile {
     @OneToMany(mappedBy = "efile")
     private Set<Rating> ratings;
 
+    @ManyToMany(mappedBy = "efiles")
+    private Set<Wishlist> wishlists;
+
     private Double averageRating;
 
     public Efile() {
