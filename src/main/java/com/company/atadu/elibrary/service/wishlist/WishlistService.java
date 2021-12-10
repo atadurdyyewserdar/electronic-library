@@ -8,18 +8,26 @@ import com.company.atadu.elibrary.model.wishlist.Wishlist;
 import com.company.atadu.elibrary.repo.efile.EfileRepo;
 import com.company.atadu.elibrary.repo.user.AppUserRepo;
 import com.company.atadu.elibrary.repo.wishlist.WishlistRepo;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class WishlistService {
 
     private final AppUserRepo appUserRepo;
     private final WishlistRepo wishlistRepo;
     private final EfileRepo efileRepo;
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
     public WishlistService(WishlistRepo wishlistRepo,
@@ -31,8 +39,7 @@ public class WishlistService {
     }
 
     public String createWishlist(WishlistDto wishlistDto) {
-        UserPrincipal principal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        AppUser appUser = appUserRepo.findUserByUsername(principal.getUsername());
+        AppUser appUser = appUserRepo.findUserByUsername(wishlistDto.getUserName());
         Wishlist wishlist = new Wishlist();
         wishlist.setAppUser(appUser);
         wishlist.setPrivate(wishlistDto.isPrivate());
@@ -67,5 +74,15 @@ public class WishlistService {
 
     public void deleteWishlist(Long wishlistId) {
         wishlistRepo.deleteById(wishlistId);
+    }
+
+    public List<Wishlist> getAllWishlists() {
+        return wishlistRepo.findAll();
+    }
+
+    public List<String> getAllWishlistForUser(String username) {
+        AppUser appUser = appUserRepo.findUserByUsername(username);
+        List<Wishlist> wishlists = wishlistRepo.findWishlistByAppUser(appUser);
+        return wishlists.stream().map(Wishlist::getName).collect(Collectors.toList());
     }
 }

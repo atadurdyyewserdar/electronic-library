@@ -3,6 +3,7 @@ package com.company.atadu.elibrary.dto.wishlist;
 import java.util.Set;
 
 public class WishlistDto {
+    private String userName;
     private String wishlistName;
     private boolean isPrivate;
     private Set<String> tags;
@@ -11,10 +12,12 @@ public class WishlistDto {
 
     }
 
-    public WishlistDto(String wishlistName, boolean isPrivate, Set<String> tags) {
-        this.wishlistName = wishlistName;
-        this.isPrivate = isPrivate;
-        this.tags = tags;
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public String getWishlistName() {

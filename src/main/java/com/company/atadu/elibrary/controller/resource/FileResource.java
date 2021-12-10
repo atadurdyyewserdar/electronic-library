@@ -1,6 +1,5 @@
 package com.company.atadu.elibrary.controller.resource;
 
-import com.company.atadu.elibrary.dto.efile.EfileDto;
 import com.company.atadu.elibrary.service.resource.FileResourceService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -28,9 +27,12 @@ public class FileResource {
         this.fileResourceService = fileResourceService;
     }
 
+
+    //try catch in service and throw as runtime ex
     @PostMapping("/upload-single-file")
-    public ResponseEntity<String> uploadFile(@RequestParam("files") MultipartFile multipartFile, @RequestBody EfileDto efileDto) throws IOException {
-        String filename = fileResourceService.saveEfile(multipartFile, efileDto);
+    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile multipartFile,
+                                             @RequestParam("username") String username) throws IOException {
+        String filename = fileResourceService.saveEfile(multipartFile, username);
         return ResponseEntity.ok().body(filename);
     }
 

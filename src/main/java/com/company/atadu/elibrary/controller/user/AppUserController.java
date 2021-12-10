@@ -36,6 +36,7 @@ import static org.springframework.http.MediaType.IMAGE_JPEG_VALUE;
 
 @RestController
 @RequestMapping(path = {"/", "/user"})
+@CrossOrigin(origins = "*")
 public class AppUserController {
     public static final String EMAIL_SENT = "An email with a new password was sent to: ";
     public static final String USER_DELETED_SUCCESSFULLY = "User deleted successfully";
@@ -81,10 +82,11 @@ public class AppUserController {
         return response(HttpStatus.OK, "Wishlist deleted successfully");
     }
 
+    //Move to wishlistController
     @PutMapping("/update-wishlist")
     public ResponseEntity<Wishlist> updateWishlist(@RequestParam("wishlistId") Long wishlistId,
                                                    @RequestParam("wishlistName") String name,
-                                                   @RequestParam("isPrivate") boolean isPrivate) {
+                                                   @RequestParam("isPrivate") Boolean isPrivate) {
         Wishlist updatedWishlist = wishlistService.updateWishlist(wishlistId, name, isPrivate);
         return new ResponseEntity<>(updatedWishlist, HttpStatus.OK);
     }
@@ -101,7 +103,7 @@ public class AppUserController {
         AppUser loginUser = userService.findUserByUsername(user.getUsername());
         UserPrincipal userPrincipal = new UserPrincipal(loginUser);
         HttpHeaders jwtHeader = getJwtHeader(userPrincipal);
-        return new ResponseEntity<>(loginUser, jwtHeader, HttpStatus.OK);
+        return ResponseEntity.ok().headers(jwtHeader).body(loginUser);
     }
 
     @PostMapping("/add")
@@ -129,6 +131,24 @@ public class AppUserController {
                                           @RequestParam("isNonLocked") String isNonLocked,
                                           @RequestParam(value = "profileImage", required = false) MultipartFile profileImage) throws UserNotFoundException, EmailNotFoundException, IOException, UsernameExistException {
         AppUser updatedUser = userService.updateUser(currentUsername, firstName, lastName, username, email, role,
+                Boolean.parseBoolean(isNonLocked), Boolean.parseBoolean(isActive), profileImage);
+        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+    }
+
+
+    //Use @requestbody
+    @PostMapping("/update/{id}")
+    public ResponseEntity<AppUser> updateById(@PathVariable Long id,
+                                              @RequestParam("firstName") String firstName,
+                                              @RequestParam("lastName") String lastName,
+                                              @RequestParam("username") String username,
+                                              @RequestParam("email") String email,
+                                              @RequestParam("role") String role,
+                                              @RequestParam("isActive") String isActive,
+                                              @RequestParam("isNonLocked") String isNonLocked,
+                                              @RequestParam(value = "profileImage", required = false) MultipartFile profileImage)
+            throws UserNotFoundException, EmailNotFoundException, IOException, UsernameExistException {
+        AppUser updatedUser = userService.updateUserById(id, firstName, lastName, username, email, role,
                 Boolean.parseBoolean(isNonLocked), Boolean.parseBoolean(isActive), profileImage);
         return new ResponseEntity<>(updatedUser, HttpStatus.OK);
     }

@@ -3,10 +3,13 @@ package com.company.atadu.elibrary.model.user;
 import com.company.atadu.elibrary.model.efile.Efile;
 import com.company.atadu.elibrary.model.rating.Rating;
 import com.company.atadu.elibrary.model.wishlist.Wishlist;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 
@@ -38,7 +41,7 @@ public class AppUser implements Serializable {
     private Set<Rating> ratings;
 
     @OneToMany(mappedBy = "appUser")
-    private Set<Wishlist> wishlists;
+    private List<Wishlist> wishlists;
 
     public AppUser() {
     }
@@ -177,5 +180,13 @@ public class AppUser implements Serializable {
 
     public void setRatings(Set<Rating> ratings) {
         this.ratings = ratings;
+    }
+
+    public List<Wishlist> getWishlists() {
+        return wishlists;
+    }
+
+    public void setWishlists(List<Wishlist> wishlists) {
+        this.wishlists = wishlists;
     }
 }

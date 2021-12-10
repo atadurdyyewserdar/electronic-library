@@ -2,6 +2,9 @@ package com.company.atadu.elibrary.model.wishlist;
 
 import com.company.atadu.elibrary.model.efile.Efile;
 import com.company.atadu.elibrary.model.user.AppUser;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 import java.util.Set;
@@ -24,6 +27,8 @@ public class Wishlist {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonIgnore
     private AppUser appUser;
 
     public Wishlist() {

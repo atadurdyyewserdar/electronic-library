@@ -31,7 +31,8 @@ public class JWTTokenProvider {
         String[] claims = getClaimsFromUser(userPrincipal);
         return JWT.create().withIssuer(SecurityConstant.IBA_GROUP)
                 .withAudience(SecurityConstant.IBA_GROUP_ADMINISTRATION)
-                .withIssuedAt(new Date()).withSubject(userPrincipal.getUsername())
+                .withIssuedAt(new Date())
+                .withSubject(userPrincipal.getUsername())
                 .withArrayClaim(SecurityConstant.AUTHORITIES, claims)
                 .withExpiresAt(new Date(System.currentTimeMillis() + SecurityConstant.EXPIRATION_TIME))
                 .sign(Algorithm.HMAC512(secret.getBytes()));

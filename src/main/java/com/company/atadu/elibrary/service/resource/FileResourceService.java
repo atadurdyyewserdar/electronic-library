@@ -1,8 +1,15 @@
 package com.company.atadu.elibrary.service.resource;
 
-import com.company.atadu.elibrary.dto.efile.EfileDto;
+import com.company.atadu.elibrary.model.efile.Efile;
+import com.company.atadu.elibrary.model.efile.EfileFormat;
+import com.company.atadu.elibrary.model.user.UserPrincipal;
+import com.company.atadu.elibrary.repo.resource.FileResourceRepo;
+import com.company.atadu.elibrary.repo.user.AppUserRepo;
+import org.apache.commons.io.FilenameUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,7 +18,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 import static com.company.atadu.elibrary.controller.resource.FileResource.DIRECTORY;
@@ -21,16 +32,31 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 @Service
 public class FileResourceService {
-    //private FileResourceRepo fileResourceRepo;
+    private FileResourceRepo fileResourceRepo;
+    private AppUserRepo appUserRepo;
 
-//    public FileResourceService(FileResourceRepo fileResourceRepo) {
-//        this.fileResourceRepo = fileResourceRepo;
-//    }
+    @Autowired
+    public FileResourceService(FileResourceRepo fileResourceRepo,
+                               AppUserRepo appUserRepo
+    ) {
+        this.fileResourceRepo = fileResourceRepo;
+        this.appUserRepo = appUserRepo;
+    }
 
-    public String saveEfile(MultipartFile multipartFile, EfileDto efileDto) throws IOException {
+    //move multipart to controller
+    //throw only runtime
+    public String saveEfile(MultipartFile multipartFile, String username) throws IOException {
         String filename = StringUtils.cleanPath(multipartFile.getOriginalFilename());
         Path fileStorage = get(DIRECTORY, filename).toAbsolutePath().normalize();
         copy(multipartFile.getInputStream(), fileStorage, REPLACE_EXISTING);
+        Efile efile = new Efile();
+        efile.setEfileFormat(EfileFormat.PDF);
+        efile.setAverageRating(0D);
+        efile.setName(filename);
+        efile.setLocationUrl(fileStorage.toString());
+        efile.setAppUser(appUserRepo.findUserByUsername(username));
+        efile.setPublishedTime(convertToLocalDateTimeViaInstant(new Date()));
+        fileResourceRepo.save(efile);
         return filename;
     }
 
@@ -52,5 +78,11 @@ public class FileResourceService {
             throw new FileNotFoundException(filename + " was not found on the server");
         }
         return new UrlResource(filePath.toUri());
+    }
+
+    public LocalDateTime convertToLocalDateTimeViaInstant(Date dateToConvert) {
+        return dateToConvert.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
     }
 }

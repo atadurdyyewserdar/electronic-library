@@ -1,6 +1,7 @@
 package com.company.atadu.elibrary.model.author;
 
 import com.company.atadu.elibrary.model.efile.Efile;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.util.Set;
@@ -14,5 +15,6 @@ public class Author {
     private String lastName;
 
     @ManyToMany(mappedBy = "authors")
+    @JsonIgnore
     private Set<Efile> efiles;
 }

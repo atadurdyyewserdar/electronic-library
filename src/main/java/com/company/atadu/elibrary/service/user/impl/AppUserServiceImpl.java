@@ -32,8 +32,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -95,8 +97,7 @@ public class AppUserServiceImpl implements AppUserService, UserDetailsService {
         appUser.setAuthorities(Role.ROLE_USER.getAuthorities());
         appUser.setProfileImageUrl(getTemporaryProfileImageURL(username));
         appUserRepo.save(appUser);
-        //LOGGER.info("New user password: " + password); //fWDKDDnJtN
-        //appUserRepo.sendNewPasswordEmail(firstname, password, email);
+        emailService.sendNewPasswordEmail(firstname, password, email);
         return appUser;
     }
 
@@ -149,9 +150,27 @@ public class AppUserServiceImpl implements AppUserService, UserDetailsService {
         currentUser.setNotLocked(isNonLocked);
         currentUser.setRole(getRoleEnumName(newRole).name());
         currentUser.setAuthorities(getRoleEnumName(newRole).getAuthorities());
+        currentUser.setWishlists(new ArrayList<>());
         appUserRepo.save(currentUser);
         saveProfileImage(currentUser, newProfileImage);
         return currentUser;
+    }
+
+    @Override
+    public AppUser updateUserById(Long id, String newFirstName, String newLastName, String newUsername, String newEmail, String newRole, boolean isNonLocked, boolean isActive, MultipartFile newProfileImage) throws UserNotFoundException, EmailNotFoundException, UsernameExistException, IOException {
+        AppUser user = appUserRepo.findById(id).orElseThrow(() -> new UserNotFoundException("Could not find user with id: " + id));
+        user.setFirstName(newFirstName);
+        user.setLastName(newLastName);
+        user.setJoinDate(new Date());
+        user.setUsername(newUsername);
+        user.setEmail(newEmail);
+        user.setActive(isActive);
+        user.setNotLocked(isNonLocked);
+        user.setRole(getRoleEnumName(newRole).name());
+        user.setAuthorities(getRoleEnumName(newRole).getAuthorities());
+        appUserRepo.save(user);
+        saveProfileImage(user, newProfileImage);
+        return user;
     }
 
     @Override
