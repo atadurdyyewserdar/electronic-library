@@ -1,6 +1,7 @@
 package com.company.atadu.elibrary.constant;
 
 public class FileConstant {
+    public static final String DIRECTORY = System.getProperty("user.home") + "/Downloads/uploads/";
     public static final String USER_IMAGE_PATH = "/user/image";
     public static final String JPG_EXTENSION = "jpg";
     public static final String USER_FOLDER = System.getProperty("user.home") + "/elibrary/user/";

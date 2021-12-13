@@ -5,7 +5,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.company.atadu.elibrary.constant.SecurityConstant;
-import com.company.atadu.elibrary.model.user.UserPrincipal;
+import com.company.atadu.elibrary.model.UserPrincipal;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

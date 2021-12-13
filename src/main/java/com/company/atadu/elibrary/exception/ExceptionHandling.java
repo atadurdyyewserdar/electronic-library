@@ -1,7 +1,7 @@
 package com.company.atadu.elibrary.exception;
 
 import com.auth0.jwt.exceptions.TokenExpiredException;
-import com.company.atadu.elibrary.model.user.HttpResponse;
+import com.company.atadu.elibrary.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.servlet.error.ErrorController;

@@ -4,7 +4,7 @@ import com.company.atadu.elibrary.constant.SecurityConstant;
 import com.company.atadu.elibrary.filter.JwtAccessDeniedHandler;
 import com.company.atadu.elibrary.filter.JwtAuthenticationEntryPoint;
 import com.company.atadu.elibrary.filter.JwtAuthorizationFilter;
-import com.company.atadu.elibrary.service.user.LoginAttemptService;
+import com.company.atadu.elibrary.service.LoginAttemptService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -19,34 +19,24 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-    private JwtAuthorizationFilter jwtAuthorizationFilter;
-    private JwtAccessDeniedHandler jwtAccessDeniedHandler;
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private UserDetailsService userDetailsService;
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
-    private LoginAttemptService loginAttemptService;
-
     @Autowired
-    public SecurityConfiguration(JwtAuthorizationFilter jwtAuthorizationFilter,
-                                 JwtAccessDeniedHandler jwtAccessDeniedHandler,
-                                 JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-                                 @Qualifier("appUserDetailsService") UserDetailsService userDetailsService,
-                                 BCryptPasswordEncoder bCryptPasswordEncoder,
-                                 LoginAttemptService loginAttemptService) {
-        this.jwtAccessDeniedHandler = jwtAccessDeniedHandler;
-        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
-        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-        this.jwtAuthorizationFilter = jwtAuthorizationFilter;
-        this.userDetailsService = userDetailsService;
-        this.loginAttemptService = loginAttemptService;
-    }
+    private JwtAuthorizationFilter jwtAuthorizationFilter;
+    @Autowired
+    private JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    @Autowired
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    @Autowired
+    private UserDetailsService userDetailsService;
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
+    @Autowired
+    private LoginAttemptService loginAttemptService;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {

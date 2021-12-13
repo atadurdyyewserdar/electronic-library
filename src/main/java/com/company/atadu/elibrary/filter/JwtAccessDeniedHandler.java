@@ -1,7 +1,7 @@
 package com.company.atadu.elibrary.filter;
 
 import com.company.atadu.elibrary.constant.SecurityConstant;
-import com.company.atadu.elibrary.model.user.HttpResponse;
+import com.company.atadu.elibrary.model.HttpResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
