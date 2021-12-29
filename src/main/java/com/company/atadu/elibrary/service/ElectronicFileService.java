@@ -1,12 +1,17 @@
 package com.company.atadu.elibrary.service;
 
+import com.company.atadu.elibrary.dto.ElectronicFileDto;
 import com.company.atadu.elibrary.model.ElectronicFile;
 import com.company.atadu.elibrary.model.ElectronicFileFormat;
+import com.company.atadu.elibrary.repo.ElectronicFileRepo;
 import com.company.atadu.elibrary.repo.FileResourceRepo;
 import com.company.atadu.elibrary.repo.AppUserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +25,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.company.atadu.elibrary.constant.FileConstant.DIRECTORY;
 import static java.nio.file.Files.copy;
@@ -28,16 +34,12 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 @Service
 public class ElectronicFileService {
-    private FileResourceRepo fileResourceRepo;
-    private AppUserRepo appUserRepo;
-
     @Autowired
-    public ElectronicFileService(FileResourceRepo fileResourceRepo,
-                                 AppUserRepo appUserRepo
-    ) {
-        this.fileResourceRepo = fileResourceRepo;
-        this.appUserRepo = appUserRepo;
-    }
+    private FileResourceRepo fileResourceRepo;
+    @Autowired
+    private AppUserRepo appUserRepo;
+    @Autowired
+    private ElectronicFileRepo electronicFileRepo;
 
     //throw only runtime
     public String saveEfile(MultipartFile multipartFile, String username) throws IOException {
@@ -73,6 +75,27 @@ public class ElectronicFileService {
             throw new FileNotFoundException(filename + " was not found on the server");
         }
         return new UrlResource(filePath.toUri());
+    }
+
+    public List<ElectronicFileDto> getAllFiles(int pagination) {
+        Pageable pageable = PageRequest.of(pagination, 10).withSort(Sort.by("id"));
+        List<ElectronicFile> files = fileResourceRepo.findAll(pageable).getContent();
+        List<ElectronicFileDto> list = new ArrayList<>();
+        for (ElectronicFile e : files) {
+            list.add(new ElectronicFileDto(e));
+        }
+        return list;
+    }
+
+    public List<ElectronicFileDto> getFilteredFiles(int pagination, String authorName, LocalDateTime date, Double rating) {
+        Pageable pageable = PageRequest.of(pagination, 10).withSort(Sort.by("id"));
+        List<ElectronicFile> files = electronicFileRepo
+                .findAllByAuthors_FirstNameAndPublishedTimeBeforeAndAverageRatingLessThan(
+                        authorName,
+                        date,
+                        rating,
+                        pageable);
+        return files.stream().map(ElectronicFileDto::new).collect(Collectors.toList());
     }
 
     public LocalDateTime convertToLocalDateTimeViaInstant(Date dateToConvert) {

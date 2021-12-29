@@ -1,6 +1,8 @@
 package com.company.atadu.elibrary.controller;
 
+import com.company.atadu.elibrary.dto.ElectronicFileDto;
 import com.company.atadu.elibrary.service.ElectronicFileService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -10,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -19,12 +22,12 @@ import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
 @RequestMapping("/resource")
 public class ElectronicFileController {
 
+    @Autowired
     private ElectronicFileService electronicFileService;
 
     public ElectronicFileController(ElectronicFileService electronicFileService) {
         this.electronicFileService = electronicFileService;
     }
-
 
     //try catch in service and throw as runtime ex
     @PostMapping("/upload-single-file")
@@ -48,5 +51,13 @@ public class ElectronicFileController {
         httpHeaders.add(CONTENT_DISPOSITION, "attachment;File-Name=" + resource.getFilename());
         return ResponseEntity.ok().contentType(MediaType.MULTIPART_FORM_DATA)
                 .headers(httpHeaders).body(resource);
+    }
+
+    @GetMapping("/books/all")
+    public ResponseEntity<List<ElectronicFileDto>> getAllBooks(@RequestParam("page") int pagination,
+                                                               @RequestParam("author") String authorName,
+                                                               @RequestParam("date") LocalDateTime date,
+                                                               @RequestParam("rate") double rate) {
+        return ResponseEntity.ok().body(electronicFileService.getFilteredFiles(pagination, authorName, date, rate));
     }
 }

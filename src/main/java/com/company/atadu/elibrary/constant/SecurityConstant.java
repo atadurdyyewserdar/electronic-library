@@ -15,6 +15,8 @@ public class SecurityConstant {
             "/user/login",
             "/user/register",
             "/user/resetpassword/**",
-            "/user/image/**"};
+            "/user/image/**",
+            "/resource/**"
+    };
     //public static final String[] PUBLIC_URLS = {"**"};
 }

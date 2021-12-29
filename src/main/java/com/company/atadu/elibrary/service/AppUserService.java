@@ -3,6 +3,8 @@ package com.company.atadu.elibrary.service;
 import com.company.atadu.elibrary.constant.AppUserImplConstant;
 import com.company.atadu.elibrary.constant.FileConstant;
 import com.company.atadu.elibrary.dto.AppUserDto;
+import com.company.atadu.elibrary.dto.LoginDto;
+import com.company.atadu.elibrary.dto.RegisterDto;
 import com.company.atadu.elibrary.enumaration.Role;
 import com.company.atadu.elibrary.exception.EmailNotFoundException;
 import com.company.atadu.elibrary.exception.UserNotFoundException;
@@ -67,26 +69,25 @@ public class AppUserService implements UserDetailsService {
         }
     }
 
-    public AppUser register(String firstname, String lastName, String username, String email) throws UserNotFoundException,
-            EmailNotFoundException, UsernameExistException, MessagingException {
-        validateNewUsernameAndEmail(StringUtils.EMPTY, username, email);
+    public RegisterDto register(RegisterDto registerDto) throws MessagingException {
+        validateNewUsernameAndEmail(StringUtils.EMPTY, registerDto.getUsername(), registerDto.getEmail());
         AppUser appUser = new AppUser();
         appUser.setUserId(generateUserId());
         String password = generatePassword();
-        appUser.setFirstName(firstname);
-        appUser.setLastName(lastName);
-        appUser.setUsername(username);
-        appUser.setEmail(email);
+        appUser.setFirstName(registerDto.getFirstName());
+        appUser.setLastName(registerDto.getLastName());
+        appUser.setUsername(registerDto.getUsername());
+        appUser.setEmail(registerDto.getEmail());
         appUser.setJoinDate(new Date());
         appUser.setPassword(encodePassword(password));
         appUser.setActive(true);
         appUser.setNotLocked(true);
         appUser.setRole(Role.ROLE_USER.name());
         appUser.setAuthorities(Role.ROLE_USER.getAuthorities());
-        appUser.setProfileImageUrl(getTemporaryProfileImageURL(username));
+        appUser.setProfileImageUrl(getTemporaryProfileImageURL(registerDto.getUsername()));
         appUserRepo.save(appUser);
-        emailService.sendNewPasswordEmail(firstname, password, email);
-        return appUser;
+        emailService.sendNewPasswordEmail(registerDto.getFirstName(), password, registerDto.getEmail());
+        return registerDto;
     }
 
     public List<AppUser> getUsers() {
@@ -95,6 +96,17 @@ public class AppUserService implements UserDetailsService {
 
     public AppUser findUserByUsername(String username) {
         return appUserRepo.findUserByUsername(username);
+    }
+
+    public LoginDto getUserInLoginDto(String username) {
+        LoginDto loginDto = new LoginDto();
+        AppUser appUser = appUserRepo.findUserByUsername(username);
+        loginDto.setId(appUser.getId());
+        loginDto.setEmail(appUser.getEmail());
+        loginDto.setFirstName(appUser.getFirstName());
+        loginDto.setLastName(appUser.getLastName());
+        loginDto.setNotLocked(appUser.isNotLocked());
+        return loginDto;
     }
 
     public AppUser findUserByEmail(String email) {
@@ -135,8 +147,9 @@ public class AppUserService implements UserDetailsService {
         return user;
     }
 
-    public void deleteUser(long id) {
+    public long deleteUser(long id) {
         appUserRepo.deleteById(id);
+        return id;
     }
 
     public void resetPassword(String email) throws MessagingException, EmailNotFoundException {

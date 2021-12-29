@@ -47,6 +47,8 @@ public class ElectronicFile {
 
     private Double averageRating;
 
+    private String description;
+
     public ElectronicFile() {
     }
 }

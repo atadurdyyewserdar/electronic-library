@@ -3,6 +3,8 @@ package com.company.atadu.elibrary.controller;
 import com.company.atadu.elibrary.constant.FileConstant;
 import com.company.atadu.elibrary.constant.SecurityConstant;
 import com.company.atadu.elibrary.dto.AppUserDto;
+import com.company.atadu.elibrary.dto.LoginDto;
+import com.company.atadu.elibrary.dto.RegisterDto;
 import com.company.atadu.elibrary.exception.EmailNotFoundException;
 import com.company.atadu.elibrary.exception.UserNotFoundException;
 import com.company.atadu.elibrary.exception.UsernameExistException;
@@ -10,7 +12,6 @@ import com.company.atadu.elibrary.model.AppUser;
 import com.company.atadu.elibrary.model.HttpResponse;
 import com.company.atadu.elibrary.model.UserPrincipal;
 import com.company.atadu.elibrary.service.AppUserService;
-import com.company.atadu.elibrary.service.WishlistService;
 import com.company.atadu.elibrary.util.JWTTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -27,8 +28,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 
 import static org.springframework.http.MediaType.IMAGE_JPEG_VALUE;
@@ -48,17 +47,18 @@ public class AppUserController {
     private JWTTokenProvider tokenProvider;
 
     @PostMapping("/register")
-    public ResponseEntity<AppUser> register(@RequestBody AppUser user) throws UserNotFoundException, EmailNotFoundException, UsernameExistException, MessagingException {
-        AppUser newUser = userService.register(user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail());
-        return new ResponseEntity<>(newUser, HttpStatus.OK);
+    public ResponseEntity<RegisterDto> register(@RequestBody RegisterDto user) throws MessagingException {
+        System.out.println(user.toString());
+        return ResponseEntity.ok().body(userService.register(user));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AppUser> login(@RequestBody AppUser user) {
+    public ResponseEntity<LoginDto> login(@RequestBody AppUser user) {
         authenticate(user.getUsername(), user.getPassword());
-        AppUser loginUser = userService.findUserByUsername(user.getUsername());
-        UserPrincipal userPrincipal = new UserPrincipal(loginUser);
-        HttpHeaders jwtHeader = getJwtHeader(userPrincipal);
+        LoginDto loginUser = userService.getUserInLoginDto(user.getUsername());
+        AppUser appUser = userService.findUserByUsername(user.getUsername());
+        UserPrincipal userPrincipal = new UserPrincipal(appUser);
+        HttpHeaders jwtHeader = getJwtHeader(userPrincipal, loginUser);
         return ResponseEntity.ok().headers(jwtHeader).body(loginUser);
     }
 
@@ -95,9 +95,8 @@ public class AppUserController {
 
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasAnyAuthority('user:delete')")
-    public ResponseEntity<HttpResponse> deleteUser(@PathVariable("id") long id) {
-        userService.deleteUser(id);
-        return response(HttpStatus.OK, USER_DELETED_SUCCESSFULLY);
+    public ResponseEntity<Long> deleteUser(@PathVariable("id") long id) {
+        return new ResponseEntity<>(userService.deleteUser(id), HttpStatus.OK);
     }
 
     @PostMapping("/updateProfileImage")
@@ -116,7 +115,7 @@ public class AppUserController {
     public byte[] getTempProfileImage(@PathVariable("username") String username) throws IOException {
         URL url = new URL(FileConstant.TEMP_PROFILE_IMAGE_BASE_URL + username);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            try (InputStream inputStream = url.openStream()) {
+        try (InputStream inputStream = url.openStream()) {
             int bytesRead;
             byte[] chunk = new byte[1024];
             while ((bytesRead = inputStream.read(chunk)) > 0) {
@@ -131,9 +130,11 @@ public class AppUserController {
                 s.toUpperCase()), httpStatus);
     }
 
-    private HttpHeaders getJwtHeader(UserPrincipal user) {
+    private HttpHeaders getJwtHeader(UserPrincipal user, LoginDto loginDto) {
         HttpHeaders headers = new HttpHeaders();
-        headers.add(SecurityConstant.JWT_TOKEN_HEADER, tokenProvider.generateJwtToken(user));
+        String token = tokenProvider.generateJwtToken(user);
+        loginDto.setToken(token);
+        headers.add(SecurityConstant.JWT_TOKEN_HEADER, token);
         return headers;
     }
 
