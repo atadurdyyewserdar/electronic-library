@@ -3,7 +3,7 @@ package com.company.atadu.elibrary.constant;
 public class EmailConstant {
     public static final String SIMPLE_MAIL_TRANSFER_PROTOCOL = "smtps";
     public static final String USERNAME = "atadurdyyewserdar999";
-    public static final String PASSWORD = "qpuzpqthwdbdjxwh";
+    public static final String PASSWORD = "";
     public static final String FROM_EMAIL = "atadurdyyewserdar999@gmail.com";
     public static final String CC_EMAIL = "";
     public static final String EMAIL_SUBJECT = "IBA Group - New Password";

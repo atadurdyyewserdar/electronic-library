@@ -14,12 +14,14 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.persistence.NoResultException;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.util.Objects;
 
+@RestControllerAdvice
 public class ExceptionHandling implements ErrorController {
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
     private static final String ACCOUNT_LOCKED = "Your account has been locked. Please contact administration";

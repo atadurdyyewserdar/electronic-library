@@ -47,7 +47,7 @@ public class AppUserController {
     private JWTTokenProvider tokenProvider;
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterDto> register(@RequestBody RegisterDto user) throws MessagingException {
+    public ResponseEntity<RegisterDto> register(@RequestBody RegisterDto user) throws MessagingException, UserNotFoundException, EmailNotFoundException, UsernameExistException {
         System.out.println(user.toString());
         return ResponseEntity.ok().body(userService.register(user));
     }
@@ -63,7 +63,7 @@ public class AppUserController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<AppUser> addNewUser(AppUserDto newUser) throws IOException {
+    public ResponseEntity<AppUser> addNewUser(AppUserDto newUser) throws IOException, UserNotFoundException, EmailNotFoundException, UsernameExistException {
         AppUser user = userService.addNewUser(newUser);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }

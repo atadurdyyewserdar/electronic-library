@@ -69,7 +69,7 @@ public class AppUserService implements UserDetailsService {
         }
     }
 
-    public RegisterDto register(RegisterDto registerDto) throws MessagingException {
+    public RegisterDto register(RegisterDto registerDto) throws MessagingException, UserNotFoundException, EmailNotFoundException, UsernameExistException {
         validateNewUsernameAndEmail(StringUtils.EMPTY, registerDto.getUsername(), registerDto.getEmail());
         AppUser appUser = new AppUser();
         appUser.setUserId(generateUserId());
@@ -113,7 +113,7 @@ public class AppUserService implements UserDetailsService {
         return appUserRepo.findUserByEmail(email);
     }
 
-    public AppUser addNewUser(AppUserDto newUser) throws IOException {
+    public AppUser addNewUser(AppUserDto newUser) throws IOException, UserNotFoundException, EmailNotFoundException, UsernameExistException {
         validateNewUsernameAndEmail(AppUserImplConstant.EMPTY, newUser.getUsername(), newUser.getEmail());
         AppUser appUser = new AppUser();
         String password = generatePassword();
@@ -163,7 +163,7 @@ public class AppUserService implements UserDetailsService {
         emailService.sendNewPasswordEmail(appUser.getFirstName(), password, appUser.getEmail());
     }
 
-    public AppUser updateProfileImage(String username, MultipartFile newImage) throws IOException {
+    public AppUser updateProfileImage(String username, MultipartFile newImage) throws IOException, UserNotFoundException, EmailNotFoundException, UsernameExistException {
         AppUser appUser = validateNewUsernameAndEmail(username, null, null);
         saveProfileImage(appUser, newImage);
         return appUser;
@@ -207,47 +207,30 @@ public class AppUserService implements UserDetailsService {
         return RandomStringUtils.randomNumeric(10);
     }
 
-    private AppUser validateNewUsernameAndEmail(String currentUsername, String newUsername, String newEmail) {
+    private AppUser validateNewUsernameAndEmail(String currentUsername, String newUsername, String newEmail) throws UserNotFoundException, UsernameExistException, EmailNotFoundException {
         AppUser userByUsername = findUserByUsername(newUsername);
         AppUser userByEmail = findUserByEmail(newEmail);
         if (StringUtils.isNotBlank(currentUsername)) {
             AppUser currentUser = findUserByUsername(currentUsername);
             if (currentUser == null) {
-                try {
-                    throw new UserNotFoundException(AppUserImplConstant.NO_USER_FOUND_BY_USERNAME + currentUsername);
-                } catch (UserNotFoundException e) {
-                    e.printStackTrace();
-                }
+                throw new UserNotFoundException(AppUserImplConstant.NO_USER_FOUND_BY_USERNAME + currentUsername);
             }
             if (userByUsername != null && !currentUser.getId().equals(userByUsername.getId())) {
-                try {
-                    throw new UsernameExistException(AppUserImplConstant.USERNAME_ALREADY_EXISTS);
-                } catch (UsernameExistException e) {
-                    e.printStackTrace();
-                }
+                throw new UsernameExistException(AppUserImplConstant.USERNAME_ALREADY_EXISTS);
+
             }
             if (userByEmail != null && !currentUser.getId().equals(userByEmail.getId())) {
-                try {
-                    throw new EmailNotFoundException(AppUserImplConstant.EMAIL_ALREADY_EXISTS);
-                } catch (EmailNotFoundException e) {
-                    e.printStackTrace();
-                }
+                throw new EmailNotFoundException(AppUserImplConstant.EMAIL_ALREADY_EXISTS);
+
             }
             return currentUser;
         } else {
             if (userByUsername != null) {
-                try {
-                    throw new UsernameExistException(AppUserImplConstant.USERNAME_ALREADY_EXISTS);
-                } catch (UsernameExistException e) {
-                    e.printStackTrace();
-                }
+                throw new UsernameExistException(AppUserImplConstant.USERNAME_ALREADY_EXISTS);
             }
             if (userByEmail != null) {
-                try {
-                    throw new EmailNotFoundException(AppUserImplConstant.EMAIL_ALREADY_EXISTS);
-                } catch (EmailNotFoundException e) {
-                    e.printStackTrace();
-                }
+
+                throw new EmailNotFoundException(AppUserImplConstant.EMAIL_ALREADY_EXISTS);
             }
             return null;
         }
