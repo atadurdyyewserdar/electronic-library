@@ -6,12 +6,11 @@ import com.company.atadu.elibrary.dto.AppUserDto;
 import com.company.atadu.elibrary.dto.LoginDto;
 import com.company.atadu.elibrary.dto.RegisterDto;
 import com.company.atadu.elibrary.enumaration.Role;
-import com.company.atadu.elibrary.exception.EmailNotFoundException;
-import com.company.atadu.elibrary.exception.UserNotFoundException;
-import com.company.atadu.elibrary.exception.UsernameExistException;
+import com.company.atadu.elibrary.exception.*;
 import com.company.atadu.elibrary.model.AppUser;
 import com.company.atadu.elibrary.model.UserPrincipal;
 import com.company.atadu.elibrary.repo.AppUserRepo;
+import com.company.atadu.elibrary.util.DataChecker;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -40,7 +39,7 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 @Service
 @Transactional
 @Qualifier("appUserDetailsService")
-public class AppUserService implements UserDetailsService {
+public class AppUserService implements UserService, UserDetailsService {
 
     @Autowired
     private AppUserRepo appUserRepo;
@@ -54,7 +53,12 @@ public class AppUserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        AppUser appUser = appUserRepo.findUserByUsername(username);
+        AppUser appUser = null;
+        if (username.contains("@")) {
+            appUser = appUserRepo.findUserByEmail(username);
+        } else {
+            appUser = appUserRepo.findUserByUsername(username);
+        }
         if (appUser == null) {
             LOGGER.error(AppUserImplConstant.NO_USER_FOUND_BY_USERNAME + username);
             throw new UsernameNotFoundException(AppUserImplConstant.NO_USER_FOUND_BY_USERNAME + username);
@@ -69,36 +73,46 @@ public class AppUserService implements UserDetailsService {
         }
     }
 
-    public RegisterDto register(RegisterDto registerDto) throws MessagingException, UserNotFoundException, EmailNotFoundException, UsernameExistException {
+    @Override
+    public RegisterDto register(RegisterDto registerDto) throws MessagingException, UserNotFoundException, EmailNotFoundException, UsernameExistException, EmailExistException, InvalidCredentialsException {
         validateNewUsernameAndEmail(StringUtils.EMPTY, registerDto.getUsername(), registerDto.getEmail());
+        if (!DataChecker.isSecurePassword(registerDto.getPassword())) {
+            throw new InvalidCredentialsException("Invalid password");
+        }
         AppUser appUser = new AppUser();
         appUser.setUserId(generateUserId());
-        String password = generatePassword();
+//        String password = generatePassword();
+//        appUser.setPassword(registerDto.getPassword());
+        appUser.setPassword(encodePassword(registerDto.getPassword()));
         appUser.setFirstName(registerDto.getFirstName());
         appUser.setLastName(registerDto.getLastName());
         appUser.setUsername(registerDto.getUsername());
         appUser.setEmail(registerDto.getEmail());
         appUser.setJoinDate(new Date());
-        appUser.setPassword(encodePassword(password));
         appUser.setActive(true);
         appUser.setNotLocked(true);
         appUser.setRole(Role.ROLE_USER.name());
         appUser.setAuthorities(Role.ROLE_USER.getAuthorities());
         appUser.setProfileImageUrl(getTemporaryProfileImageURL(registerDto.getUsername()));
         appUserRepo.save(appUser);
-        emailService.sendNewPasswordEmail(registerDto.getFirstName(), password, registerDto.getEmail());
+//        emailService.sendNewPasswordEmail(registerDto.getFirstName(), password, registerDto.getEmail());
         return registerDto;
     }
 
+    @Override
     public List<AppUser> getUsers() {
         return appUserRepo.findAll();
     }
 
+    @Override
     public AppUser findUserByUsername(String username) {
         return appUserRepo.findUserByUsername(username);
     }
 
     public LoginDto getUserInLoginDto(String username) {
+//        AppUser appUser2 = appUserRepo.findUserByEmail("atadurdyyewserdar@gmail.com");
+//        appUser2.setPassword(encodePassword("admin"));
+//        appUserRepo.save(appUser2);
         LoginDto loginDto = new LoginDto();
         AppUser appUser = appUserRepo.findUserByUsername(username);
         loginDto.setId(appUser.getId());
@@ -106,14 +120,17 @@ public class AppUserService implements UserDetailsService {
         loginDto.setFirstName(appUser.getFirstName());
         loginDto.setLastName(appUser.getLastName());
         loginDto.setNotLocked(appUser.isNotLocked());
+        loginDto.setUsername(appUser.getUsername());
+        System.out.println("username is " + appUser.getUsername());
         return loginDto;
     }
 
+    @Override
     public AppUser findUserByEmail(String email) {
         return appUserRepo.findUserByEmail(email);
     }
 
-    public AppUser addNewUser(AppUserDto newUser) throws IOException, UserNotFoundException, EmailNotFoundException, UsernameExistException {
+    public AppUser addNewUser(AppUserDto newUser) throws IOException, UserNotFoundException, EmailNotFoundException, UsernameExistException, EmailExistException {
         validateNewUsernameAndEmail(AppUserImplConstant.EMPTY, newUser.getUsername(), newUser.getEmail());
         AppUser appUser = new AppUser();
         String password = generatePassword();
@@ -163,7 +180,7 @@ public class AppUserService implements UserDetailsService {
         emailService.sendNewPasswordEmail(appUser.getFirstName(), password, appUser.getEmail());
     }
 
-    public AppUser updateProfileImage(String username, MultipartFile newImage) throws IOException, UserNotFoundException, EmailNotFoundException, UsernameExistException {
+    public AppUser updateProfileImage(String username, MultipartFile newImage) throws IOException, UserNotFoundException, EmailNotFoundException, UsernameExistException, EmailExistException {
         AppUser appUser = validateNewUsernameAndEmail(username, null, null);
         saveProfileImage(appUser, newImage);
         return appUser;
@@ -207,7 +224,7 @@ public class AppUserService implements UserDetailsService {
         return RandomStringUtils.randomNumeric(10);
     }
 
-    private AppUser validateNewUsernameAndEmail(String currentUsername, String newUsername, String newEmail) throws UserNotFoundException, UsernameExistException, EmailNotFoundException {
+    private AppUser validateNewUsernameAndEmail(String currentUsername, String newUsername, String newEmail) throws UserNotFoundException, UsernameExistException, EmailNotFoundException, EmailExistException {
         AppUser userByUsername = findUserByUsername(newUsername);
         AppUser userByEmail = findUserByEmail(newEmail);
         if (StringUtils.isNotBlank(currentUsername)) {
@@ -216,20 +233,21 @@ public class AppUserService implements UserDetailsService {
                 throw new UserNotFoundException(AppUserImplConstant.NO_USER_FOUND_BY_USERNAME + currentUsername);
             }
             if (userByUsername != null && !currentUser.getId().equals(userByUsername.getId())) {
+                System.out.println("exc here 1");
                 throw new UsernameExistException(AppUserImplConstant.USERNAME_ALREADY_EXISTS);
-
             }
             if (userByEmail != null && !currentUser.getId().equals(userByEmail.getId())) {
+                System.out.println("here 2");
                 throw new EmailNotFoundException(AppUserImplConstant.EMAIL_ALREADY_EXISTS);
-
             }
             return currentUser;
         } else {
             if (userByUsername != null) {
+                System.out.println("here 3");
                 throw new UsernameExistException(AppUserImplConstant.USERNAME_ALREADY_EXISTS);
             }
             if (userByEmail != null) {
-
+                System.out.println("here 4");
                 throw new EmailNotFoundException(AppUserImplConstant.EMAIL_ALREADY_EXISTS);
             }
             return null;

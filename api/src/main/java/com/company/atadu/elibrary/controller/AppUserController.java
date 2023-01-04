@@ -5,9 +5,7 @@ import com.company.atadu.elibrary.constant.SecurityConstant;
 import com.company.atadu.elibrary.dto.AppUserDto;
 import com.company.atadu.elibrary.dto.LoginDto;
 import com.company.atadu.elibrary.dto.RegisterDto;
-import com.company.atadu.elibrary.exception.EmailNotFoundException;
-import com.company.atadu.elibrary.exception.UserNotFoundException;
-import com.company.atadu.elibrary.exception.UsernameExistException;
+import com.company.atadu.elibrary.exception.*;
 import com.company.atadu.elibrary.model.AppUser;
 import com.company.atadu.elibrary.model.HttpResponse;
 import com.company.atadu.elibrary.model.UserPrincipal;
@@ -39,16 +37,19 @@ public class AppUserController {
     public static final String EMAIL_SENT = "An email with a new password was sent to: ";
     public static final String USER_DELETED_SUCCESSFULLY = "User deleted successfully";
 
+    private final AppUserService userService;
+    private final AuthenticationManager authenticationManager;
+    private final JWTTokenProvider tokenProvider;
+
     @Autowired
-    private AppUserService userService;
-    @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
-    private JWTTokenProvider tokenProvider;
+    public AppUserController(AppUserService userService, AuthenticationManager authenticationManager, JWTTokenProvider tokenProvider) {
+        this.userService = userService;
+        this.authenticationManager = authenticationManager;
+        this.tokenProvider = tokenProvider;
+    }
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterDto> register(@RequestBody RegisterDto user) throws MessagingException, UserNotFoundException, EmailNotFoundException, UsernameExistException {
-        System.out.println(user.toString());
+    public ResponseEntity<RegisterDto> register(@RequestBody RegisterDto user) throws MessagingException, UserNotFoundException, EmailNotFoundException, UsernameExistException, EmailExistException, InvalidCredentialsException {
         return ResponseEntity.ok().body(userService.register(user));
     }
 
@@ -59,11 +60,14 @@ public class AppUserController {
         AppUser appUser = userService.findUserByUsername(user.getUsername());
         UserPrincipal userPrincipal = new UserPrincipal(appUser);
         HttpHeaders jwtHeader = getJwtHeader(userPrincipal, loginUser);
-        return ResponseEntity.ok().headers(jwtHeader).body(loginUser);
+        System.out.println(loginUser.getEmail() + " em");
+        System.out.println(loginUser.getId() + " id");
+//        return ResponseEntity.ok().headers(jwtHeader).body(loginUser);
+        return new ResponseEntity<>(loginUser, jwtHeader, HttpStatus.OK);
     }
 
     @PostMapping("/add")
-    public ResponseEntity<AppUser> addNewUser(AppUserDto newUser) throws IOException, UserNotFoundException, EmailNotFoundException, UsernameExistException {
+    public ResponseEntity<AppUser> addNewUser(AppUserDto newUser) throws IOException, UserNotFoundException, EmailNotFoundException, UsernameExistException, EmailExistException {
         AppUser user = userService.addNewUser(newUser);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
@@ -101,7 +105,7 @@ public class AppUserController {
 
     @PostMapping("/updateProfileImage")
     public ResponseEntity<AppUser> updateProfileImage(@RequestParam("username") String username,
-                                                      @RequestParam(value = "profileImage") MultipartFile profileImage) throws UserNotFoundException, EmailNotFoundException, IOException, UsernameExistException {
+                                                      @RequestParam(value = "profileImage") MultipartFile profileImage) throws UserNotFoundException, EmailNotFoundException, IOException, UsernameExistException, EmailExistException {
         AppUser user = userService.updateProfileImage(username, profileImage);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
