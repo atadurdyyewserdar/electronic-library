@@ -45,6 +45,9 @@ public class ElectronicFile {
     @JsonIgnore
     private Set<Wishlist> wishlists;
 
+    @OneToMany(mappedBy = "electronicFile")
+    private Set<Comment> comments;
+
     private Double averageRating;
 
     private String description;
