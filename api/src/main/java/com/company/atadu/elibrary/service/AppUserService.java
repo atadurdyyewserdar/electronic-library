@@ -75,14 +75,17 @@ public class AppUserService implements UserService, UserDetailsService {
 
     @Override
     public RegisterDto register(RegisterDto registerDto) throws MessagingException, UserNotFoundException, EmailNotFoundException, UsernameExistException, EmailExistException, InvalidCredentialsException {
-        validateNewUsernameAndEmail(StringUtils.EMPTY, registerDto.getUsername(), registerDto.getEmail());
         if (!DataChecker.isSecurePassword(registerDto.getPassword())) {
             throw new InvalidCredentialsException("Invalid password");
         }
+        if (!DataChecker.isValidEmail(registerDto.getEmail())) {
+            throw new InvalidCredentialsException("Invalid email");
+        }
+        validateNewUsernameAndEmail(StringUtils.EMPTY, registerDto.getUsername(), registerDto.getEmail());
         AppUser appUser = new AppUser();
         appUser.setUserId(generateUserId());
-//        String password = generatePassword();
-//        appUser.setPassword(registerDto.getPassword());
+        // String password = generatePassword();
+        // appUser.setPassword(registerDto.getPassword());
         appUser.setPassword(encodePassword(registerDto.getPassword()));
         appUser.setFirstName(registerDto.getFirstName());
         appUser.setLastName(registerDto.getLastName());
@@ -95,7 +98,7 @@ public class AppUserService implements UserService, UserDetailsService {
         appUser.setAuthorities(Role.ROLE_USER.getAuthorities());
         appUser.setProfileImageUrl(getTemporaryProfileImageURL(registerDto.getUsername()));
         appUserRepo.save(appUser);
-//        emailService.sendNewPasswordEmail(registerDto.getFirstName(), password, registerDto.getEmail());
+        // emailService.sendNewPasswordEmail(registerDto.getFirstName(), password, registerDto.getEmail());
         return registerDto;
     }
 
@@ -110,9 +113,9 @@ public class AppUserService implements UserService, UserDetailsService {
     }
 
     public LoginDto getUserInLoginDto(String username) {
-//        AppUser appUser2 = appUserRepo.findUserByEmail("atadurdyyewserdar@gmail.com");
-//        appUser2.setPassword(encodePassword("admin"));
-//        appUserRepo.save(appUser2);
+        //        AppUser appUser2 = appUserRepo.findUserByEmail("atadurdyyewserdar@gmail.com");
+        //        appUser2.setPassword(encodePassword("admin"));
+        //        appUserRepo.save(appUser2);
         LoginDto loginDto = new LoginDto();
         AppUser appUser = appUserRepo.findUserByUsername(username);
         loginDto.setId(appUser.getId());
