@@ -1,12 +1,16 @@
 package com.company.atadu.elibrary.service;
 
+import com.company.atadu.elibrary.dto.CommentDto;
 import com.company.atadu.elibrary.dto.ElectronicFileDto;
+import com.company.atadu.elibrary.dto.ElectronicFileWithComments;
+import com.company.atadu.elibrary.dto.RatingDto;
 import com.company.atadu.elibrary.model.ElectronicFile;
 import com.company.atadu.elibrary.model.ElectronicFileFormat;
+import com.company.atadu.elibrary.model.Rating;
 import com.company.atadu.elibrary.repo.ElectronicFileRepo;
 import com.company.atadu.elibrary.repo.FileResourceRepo;
 import com.company.atadu.elibrary.repo.AppUserRepo;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.company.atadu.elibrary.repo.RatingRepo;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +29,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.company.atadu.elibrary.constant.FileConstant.DIRECTORY;
@@ -34,12 +39,20 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 @Service
 public class ElectronicFileService {
-    @Autowired
-    private FileResourceRepo fileResourceRepo;
-    @Autowired
-    private AppUserRepo appUserRepo;
-    @Autowired
-    private ElectronicFileRepo electronicFileRepo;
+    private final ElectronicFileRepo electronicFileRepo;
+    private final FileResourceRepo fileResourceRepo;
+    private final AppUserRepo appUserRepo;
+
+    private final RatingRepo ratingRepo;
+    private final CommentService commentService;
+
+    public ElectronicFileService(ElectronicFileRepo electronicFileRepo, AppUserRepo appUserRepo, FileResourceRepo fileResourceRepo, RatingRepo ratingRepo, CommentService commentService) {
+        this.electronicFileRepo = electronicFileRepo;
+        this.fileResourceRepo = fileResourceRepo;
+        this.appUserRepo = appUserRepo;
+        this.ratingRepo = ratingRepo;
+        this.commentService = commentService;
+    }
 
     //throw only runtime
     public String saveEfile(MultipartFile multipartFile, String username) throws IOException {
@@ -57,6 +70,30 @@ public class ElectronicFileService {
         return filename;
     }
 
+    public ElectronicFile getBookById(Long id) throws com.company.atadu.elibrary.exception.FileNotFoundException {
+        return electronicFileRepo.findById(id).orElseThrow(
+                () -> new com.company.atadu.elibrary.exception.FileNotFoundException(
+                        "Couldn't find book with id " + id)
+        );
+    }
+
+    public ElectronicFileWithComments getBookByIdAndComments(Long id) throws com.company.atadu.elibrary.exception.FileNotFoundException {
+        ElectronicFile efile = getBookById(id);
+        List<CommentDto> comments = commentService.getCommentsOnBook(id);
+        ElectronicFileDto eFileDto = new ElectronicFileDto(efile);
+        eFileDto.setAverageRating(calculateAvgRating(id));
+        return new ElectronicFileWithComments(eFileDto, comments, new RatingDto());
+    }
+
+    public Double calculateAvgRating(Long bookId) {
+        List<Rating> rates = ratingRepo.findRatingByElectronicFileId(bookId);
+        double sum = 0.0;
+        for (Rating r : rates) {
+            sum += r.getStars();
+        }
+        return sum / rates.size();
+    }
+
     public List<String> saveMultipleEfiles(List<MultipartFile> multipartFiles) throws IOException {
         List<String> filenames = new ArrayList<>();
         String filename;
@@ -69,10 +106,11 @@ public class ElectronicFileService {
         return filenames;
     }
 
-    public Resource getFile(String filename) throws IOException {
-        Path filePath = get(DIRECTORY).toAbsolutePath().normalize().resolve(filename);
+    public Resource getFile(Long id) throws IOException {
+        ElectronicFileDto eFile = new ElectronicFileDto(electronicFileRepo.getById(id));
+        Path filePath = get(DIRECTORY).toAbsolutePath().normalize().resolve(eFile.getLocationUrl());
         if (!Files.exists(filePath)) {
-            throw new FileNotFoundException(filename + " was not found on the server");
+            throw new FileNotFoundException(eFile.getBookName() + " was not found on the server");
         }
         return new UrlResource(filePath.toUri());
     }
@@ -95,6 +133,17 @@ public class ElectronicFileService {
                         date,
                         rating,
                         pageable);
+        return files.stream().map(ElectronicFileDto::new).collect(Collectors.toList());
+    }
+
+    public List<ElectronicFileDto> searchBookByName(String bookName) {
+        List<ElectronicFile> files = electronicFileRepo.getElectronicFilesByNameContaining(bookName);
+        return files.stream().map(ElectronicFileDto::new).collect(Collectors.toList());
+    }
+
+    public List<ElectronicFileDto> getFilteredFiles() {
+        List<ElectronicFile> files = electronicFileRepo
+                .findAll();
         return files.stream().map(ElectronicFileDto::new).collect(Collectors.toList());
     }
 

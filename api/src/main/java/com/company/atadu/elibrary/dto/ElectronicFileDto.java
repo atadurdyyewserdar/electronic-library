@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Data
 public class ElectronicFileDto {
@@ -17,6 +18,7 @@ public class ElectronicFileDto {
     private String description;
     private Double averageRating;
     private List<AuthorDto> authors;
+    private String locationUrl;
 
     public ElectronicFileDto(ElectronicFile electronicFile) {
         this.id = electronicFile.getId();
@@ -26,5 +28,6 @@ public class ElectronicFileDto {
         this.electronicFileFormat = electronicFile.getElectronicFileFormat();
         this.description = electronicFile.getDescription();
         this.averageRating = electronicFile.getAverageRating();
+        this.locationUrl = electronicFile.getLocationUrl();
     }
 }
