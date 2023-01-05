@@ -8,8 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = {"/", "/user"})
-@CrossOrigin(origins = "*")
+@RequestMapping(path = {"/resource"})
 public class RatingController {
 
     private RatingService ratingService;
@@ -19,9 +18,14 @@ public class RatingController {
         this.ratingService = ratingService;
     }
 
-    @PostMapping("/rate-efile")
-    public ResponseEntity<RatingDto> rateEfile(@RequestBody RatingDto ratingDto) {
+    @PostMapping("/books/{id}/rate")
+    public ResponseEntity<RatingDto> rateEfile(@PathVariable Long id, @RequestBody RatingDto ratingDto) {
         RatingDto ratingDtoRes = ratingService.rateEfile(ratingDto);
         return new ResponseEntity<>(ratingDtoRes, HttpStatus.OK);
+    }
+
+    @GetMapping("/books/{id}/rate/{username}")
+    public ResponseEntity<RatingDto> getUserRate(@PathVariable Long id, @PathVariable String username) {
+        return new ResponseEntity<>(ratingService.getUserRate(id, username), HttpStatus.OK);
     }
 }

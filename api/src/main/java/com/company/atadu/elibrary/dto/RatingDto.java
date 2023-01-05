@@ -1,5 +1,6 @@
 package com.company.atadu.elibrary.dto;
 
+import com.company.atadu.elibrary.model.Rating;
 import lombok.Data;
 
 @Data
@@ -9,6 +10,21 @@ public class RatingDto {
     private String username;
 
     public RatingDto() {
+        this.username = "";
+        this.efileId = -1L;
+        this.star = -1;
+    }
+
+    public RatingDto(Rating rate) {
+        if (rate != null) {
+            this.efileId = rate.getAppUser().getId();
+            this.star = rate.getStars();
+            this.username = rate.getAppUser().getUsername();
+            return;
+        }
+        this.username = "";
+        this.efileId = -1L;
+        this.star = -1;
     }
 
     public Integer getStar() {
