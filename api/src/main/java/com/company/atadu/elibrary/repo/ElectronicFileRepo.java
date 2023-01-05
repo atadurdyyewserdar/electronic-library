@@ -14,4 +14,8 @@ public interface ElectronicFileRepo extends JpaRepository<ElectronicFile, Long> 
             Double rating,
             Pageable pageable
     );
+
+    List<ElectronicFile> findAllByName(String bookName);
+    List<ElectronicFile> getElectronicFilesByNameContaining(String bookName);
+
 }
