@@ -6,6 +6,7 @@ import lombok.Data;
 public class LoginDto {
     private Long id;
     private String firstName;
+    private String username;
     private String lastName;
     private String email;
     private boolean isNotLocked;

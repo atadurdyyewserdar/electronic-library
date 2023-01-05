@@ -25,18 +25,26 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
+    private final JwtAuthorizationFilter jwtAuthorizationFilter;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final UserDetailsService userDetailsService;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final LoginAttemptService loginAttemptService;
+
     @Autowired
-    private JwtAuthorizationFilter jwtAuthorizationFilter;
-    @Autowired
-    private JwtAccessDeniedHandler jwtAccessDeniedHandler;
-    @Autowired
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    @Autowired
-    private UserDetailsService userDetailsService;
-    @Autowired
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
-    @Autowired
-    private LoginAttemptService loginAttemptService;
+    public SecurityConfiguration(JwtAuthorizationFilter jwtAuthorizationFilter,
+                                 JwtAccessDeniedHandler jwtAccessDeniedHandler,
+                                 JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+                                 @Qualifier("appUserDetailsService")UserDetailsService userDetailsService,
+                                 BCryptPasswordEncoder bCryptPasswordEncoder, LoginAttemptService loginAttemptService) {
+        this.jwtAuthorizationFilter = jwtAuthorizationFilter;
+        this.jwtAccessDeniedHandler = jwtAccessDeniedHandler;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
+        this.userDetailsService = userDetailsService;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.loginAttemptService = loginAttemptService;
+    }
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {

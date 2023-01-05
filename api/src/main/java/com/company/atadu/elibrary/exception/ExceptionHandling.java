@@ -63,6 +63,11 @@ public class ExceptionHandling implements ErrorController {
         return createHttpResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
 
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<HttpResponse> invalidCredentials(InvalidCredentialsException exception) {
+        return createHttpResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
     @ExceptionHandler(UsernameExistException.class)
     public ResponseEntity<HttpResponse> usernameExistException(UsernameExistException exception) {
         return createHttpResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
@@ -75,6 +80,7 @@ public class ExceptionHandling implements ErrorController {
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<HttpResponse> userNotFoundException(UserNotFoundException exception) {
+        LOGGER.info(exception.getMessage());
         return createHttpResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
 
@@ -99,6 +105,12 @@ public class ExceptionHandling implements ErrorController {
     public ResponseEntity<HttpResponse> notFoundException(NoResultException exception) {
         LOGGER.error(exception.getMessage());
         return createHttpResponse(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(FileNotFoundException.class)
+    public ResponseEntity<HttpResponse> fileNotFoundException(FileNotFoundException ex) {
+        LOGGER.info(ex.getMessage());
+        return createHttpResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(IOException.class)
